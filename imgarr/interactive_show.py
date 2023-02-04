@@ -6,9 +6,8 @@ from IPython.display import display
 from ipywidgets import HBox, IntSlider, interactive_output
 from PIL import Image
 
-import imgarr.digital_number as digitn
-from imgarr.image_manipulation import (get_concat_horizontal,
-                                       get_concat_vertical)
+from .digital_number import num2img
+from .image_manipulation import get_concat_horizontal, get_concat_vertical
 
 ___all__ = ["InteractiveFigure", "ishow"]
 
@@ -69,7 +68,7 @@ def ishow(
         else:
             size = min(imgs[0][0].shape[:2])
         digit_imgs = [
-            digitn.num2img(n=i, fix_digit=len(str(frame_length)), size=(size, size))
+            num2img(n=i, fix_digit=len(str(frame_length)), size=(size, size))
             for i in range(frame_length + 1)
         ]
         if mode == "pil":
