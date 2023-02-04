@@ -1,2 +1,2 @@
-from imgarr.digital_number import *  # type: ignore
-from imgarr.interactive_show import *  # type: ignore
+from .digital_number import *
+from .interactive_show import *
