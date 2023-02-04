@@ -10,7 +10,8 @@ def get_install_requires():
         "numpy",
         "matplotlib",
         "pillow",
-        "opencv-python"
+        "opencv-python",
+        "ipython"
     ]
     return install_requires
 
