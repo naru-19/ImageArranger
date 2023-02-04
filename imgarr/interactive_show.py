@@ -2,12 +2,14 @@ from typing import List, Optional, Tuple, Union
 
 import matplotlib.pyplot as plt
 import numpy as np
-from imgarr.digital_number import num2img
-from imgarr.image_manipulation import (get_concat_horizontal,
-                                       get_concat_vertical)
 from IPython.display import display
 from ipywidgets import HBox, IntSlider, interactive_output
 from PIL import Image
+
+from imgarr.digital_number import num2img
+from imgarr.image_manipulation import (align_horizontal_center,
+                                       get_concat_horizontal,
+                                       get_concat_vertical)
 
 ___all__ = ["InteractiveFigure", "ishow"]
 
@@ -35,7 +37,7 @@ class InteractiveFigure:
 
     def _showNP(self, t: int) -> None:
         plt.imshow(self.imgs[t])
-        plt.axis("off")
+        # plt.axis("off")
 
     def _showPIL(self, t: int) -> None:
         display(self.imgs[t])  # type: ignore
@@ -52,7 +54,7 @@ def ishow(
         imgs: [imgs_1, imgs_2, ..., imgs_n]
         layout: Arrange the images(w,h). 'None' is horizontal.
     return:
-
+        interactive figure
     """
     for i in range(len(imgs)):
         if len(imgs[i]) != len(imgs[0]):
@@ -81,29 +83,42 @@ def ishow(
     # Arrange in row x col
     if layout:
         col, row = layout
-        while col * (row - 1) > len(imgs):
-            row -= 1
-        for i in range(frame_length):
-            frame_imgs.append(
-                get_concat_vertical(
-                    [
-                        get_concat_horizontal(
-                            [
-                                img[i]
-                                for img in imgs[j * col : min(col * (j + 1), len(imgs))]
-                            ],
-                            margin=20,
-                        )
-                        for j in range(row)
-                    ],
-                    margin=20,
-                )
-            )
     else:
-        for i in range(frame_length):
-            frame_imgs.append(
-                get_concat_horizontal([img[i] for img in imgs], margin=20)
+        col, row = len(imgs), 1
+    while col * (row - 1) > len(imgs):
+        row -= 1
+
+    # add dammy
+    if mode == "pil":
+        dammy = Image.new("RGB", (1, 1))
+    else:
+        dammy = np.ones((1, 1, 3))
+    for i in range(len(imgs), col * row):
+        imgs.append([dammy for _ in range(len(imgs[0]))])
+
+    # Width of each column
+    col_width = [
+        max([np.array(imgs[i + j * col][0]).shape[1] for j in range(row)])
+        for i in range(col)
+    ]
+    for i in range(frame_length):
+        frame_imgs.append(
+            get_concat_vertical(
+                [
+                    get_concat_horizontal(
+                        [
+                            align_horizontal_center(
+                                imgs[k][i], w=col_width[k - j * col]
+                            )
+                            for k in range(j * col, col * (j + 1))
+                        ],
+                        margin=20,
+                    )
+                    for j in range(row)
+                ],
+                margin=20,
             )
+        )
     ifig = InteractiveFigure(frame_imgs)
     ifig.show()
     return ifig
