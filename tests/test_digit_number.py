@@ -6,7 +6,7 @@ def test_num2img_01():
 
 
 def test_num2img_02():
-    num2img(5, fix_digit=2)
+    assert num2img(5, fix_digit=2)==5
 
 
 def test_num2img_03():

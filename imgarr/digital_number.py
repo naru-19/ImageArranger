@@ -29,10 +29,10 @@ def num2img(
     digit = np.zeros((7, number_of_digits * 4 + 1, 3))
     n_s = str(n)
     n_s = n_s.zfill(number_of_digits)
-    for l, num in enumerate(n_s):
+    for i, num in enumerate(n_s):
         # margin top/bottom 1px around of each number
-        # digit[:,4*l,:] is margin
-        digit[1:6, 4 * l + 1 : 4 * (l + 1)] = _get_digit(int(num))
+        # digit[:,4*i,:] is margin
+        digit[1:6, 4 * i + 1 : 4 * (i + 1)] = _get_digit(int(num))
     if size:
         h, w, _ = digit.shape
         digit = cv2.resize(
