@@ -25,7 +25,8 @@ setuptools.setup(
     long_description_content_type="text/markdown",
     url="https://github.com/naru-19/ImageArranger",
     install_requires=get_install_requires(),
-    packages=setuptools.find_packages(),
+    packages=setuptools.find_packages(where="lib"),
+    package_dir={"": "lib"},
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
