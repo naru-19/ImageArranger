@@ -3,21 +3,12 @@ from typing import List, Optional, Tuple, Union
 import matplotlib.pyplot as plt
 import numpy as np
 from IPython.display import display
-from ipywidgets import (
-    FloatSlider,
-    HBox,
-    IntSlider,
-    Select,
-    interact,
-    interactive,
-    interactive_output,
-    jslink,
-)
+from ipywidgets import HBox, IntSlider, interactive_output
 from PIL import Image
-from tqdm import tqdm
 
 import imgarr.digital_number as digitn
-from imgarr.image_manipulation import get_concat_horizontal, get_concat_vertical
+from imgarr.image_manipulation import (get_concat_horizontal,
+                                       get_concat_vertical)
 
 ___all__ = ["InteractiveFigure", "ishow"]
 
