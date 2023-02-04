@@ -4,6 +4,7 @@ import cvlib.digital_number as digitn
 import matplotlib.pyplot as plt
 import numpy as np
 from cvlib.visualize_utils import get_concat_horizontal, get_concat_vertical
+from IPython.display import display
 from ipywidgets import (FloatSlider, HBox, IntSlider, Select, interact,
                         interactive, interactive_output, jslink)
 from PIL import Image
