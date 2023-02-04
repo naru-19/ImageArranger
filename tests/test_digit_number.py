@@ -1,6 +1,8 @@
 import sys
 
 sys.path.append("../lib")
+sys.path.append(".")
+print(sys.path)
 from imgarr.digital_number import num2img
 
 
