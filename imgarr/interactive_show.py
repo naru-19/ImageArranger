@@ -50,7 +50,7 @@ def ishow(
     """
     params:
         imgs: [imgs_1, imgs_2, ..., imgs_n]
-        layout: How to arrange the images(w,h). 'None' is horizontal.
+        layout: Arrange the images(w,h). 'None' is horizontal.
     return:
 
     """
