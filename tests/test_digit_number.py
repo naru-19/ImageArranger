@@ -1,4 +1,4 @@
-from imgarr.digital_number import num2img
+from lib.imgarr.digital_number import num2img
 
 
 def test_num2img(capsys):
