@@ -11,7 +11,8 @@ def get_install_requires():
         "matplotlib",
         "pillow",
         "opencv-python",
-        "ipython"
+        "ipython",
+        "ipywidgets"
     ]
     return install_requires
 
