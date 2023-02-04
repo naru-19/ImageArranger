@@ -32,7 +32,7 @@ ifig = imgarr.ishow([imgs0, imgs1, imgs2], setFrame=True, layout=None)
 
 ```
 <img src="imgs/demo_ishow.gif" width=100%>
-You can　also use np.ndarray images in the same way.
+You can also use np.ndarray images in the same way.
 
 - [ ] implement save method.
 
