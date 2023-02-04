@@ -37,7 +37,7 @@ class InteractiveFigure:
 
     def _showNP(self, t: int) -> None:
         plt.imshow(self.imgs[t])
-        # plt.axis("off")
+        plt.axis("off")
 
     def _showPIL(self, t: int) -> None:
         display(self.imgs[t])  # type: ignore
