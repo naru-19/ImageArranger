@@ -16,7 +16,7 @@ def get_install_requires():
 
 
 setuptools.setup(
-    name="narutils",
+    name="imgarr",
     version="1.0.0",
     author="naru-19",
     author_email="narururu19@gmail.com",
