@@ -1,2 +1,2 @@
-from .digital_number import *
-from .interactive_show import *
+from imgarr.digital_number import *
+from imgarr.interactive_show import *

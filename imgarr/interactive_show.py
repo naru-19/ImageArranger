@@ -2,12 +2,12 @@ from typing import List, Optional, Tuple, Union
 
 import matplotlib.pyplot as plt
 import numpy as np
+from imgarr.digital_number import num2img
+from imgarr.image_manipulation import (get_concat_horizontal,
+                                       get_concat_vertical)
 from IPython.display import display
 from ipywidgets import HBox, IntSlider, interactive_output
 from PIL import Image
-
-from .digital_number import num2img
-from .image_manipulation import get_concat_horizontal, get_concat_vertical
 
 ___all__ = ["InteractiveFigure", "ishow"]
 
