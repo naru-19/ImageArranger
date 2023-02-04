@@ -1,11 +1,11 @@
-import os
-import sys
+# import os
+# import sys
 
-print(os.listdir("../"),"1")
-print(os.listdir("./"),"2")
-print(os.listdir("../lib"),"3")
+# print(os.listdir("../"),"1")
+# print(os.listdir("./"),"2")
+# print(os.listdir("../lib"),"3")
 
-print(sys.path)
+# print(sys.path)
 from imgarr.digital_number import num2img
 
 
