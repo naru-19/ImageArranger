@@ -3,13 +3,15 @@ from typing import List, Optional, Tuple, Union
 import numpy as np
 from PIL import Image
 
-__all__=[
+__all__ = [
     "get_concat_horizontal",
     "get_concat_vertical",
     "align_center",
     "align_horizontal_center",
     "align_vertical_center",
 ]
+
+
 def get_concat_horizontal(
     imgs: List[Union[Image.Image, np.ndarray]], alignAuto: bool = True, margin: int = 0
 ) -> Union[Image.Image, np.ndarray]:
@@ -149,4 +151,3 @@ def align_center(
         dst: Aligned image.
     """
     return align_horizontal_center(align_vertical_center(img, h), w)
-

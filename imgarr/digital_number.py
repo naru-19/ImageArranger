@@ -3,7 +3,9 @@ from typing import Optional, Tuple
 import cv2
 import numpy as np
 
-___all__=["num2img"]
+___all__ = ["num2img"]
+
+
 def num2img(
     n: int,
     fix_digit: int = -1,

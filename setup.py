@@ -12,7 +12,7 @@ def get_install_requires():
         "pillow",
         "opencv-python",
         "ipython",
-        "ipywidgets"
+        "ipywidgets",
     ]
     return install_requires
 
