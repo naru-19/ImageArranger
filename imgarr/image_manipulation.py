@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import List, Union
 
 import numpy as np
@@ -151,3 +152,21 @@ def align_center(
         dst: Aligned image.
     """
     return align_horizontal_center(align_vertical_center(img, h), w)
+
+
+def save_as_gif(
+    imgs: List[Union[np.ndarray, Image.Image]],
+    save_path: Union[str, Path],
+    loop: int = 0,
+) -> None:
+    save_path = Path(save_path)
+    assert save_path.suffix in {".gif", ".GIF"}, f"Unkown file type {save_path.suffix}"
+    # Convert np.ndarry to PIL.
+    if type(imgs[0]) == np.ndarray:
+        if imgs[0].dtype == np.uint8:
+            imgs = [Image.fromarray((img).astype(np.uint8)) for img in imgs]
+        else:
+            imgs = [Image.fromarray((img * 255).astype(np.uint8)) for img in imgs]
+    save_path.parent.mkdir(parents=True, exist_ok=True)
+    imgs[0].save(save_path, save_all=True, append_images=imgs[1:], loop=loop)
+    print(f"GIF saved {save_path}")
