@@ -13,6 +13,8 @@ def get_install_requires():
         "opencv-python",
         "ipython",
         "ipywidgets",
+        "imageio",
+        "imageio-ffmpeg",
     ]
     return install_requires
 

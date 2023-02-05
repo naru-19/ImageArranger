@@ -1,5 +1,7 @@
+from pathlib import Path
 from typing import List, Optional, Tuple, Union
 
+import cv2
 import matplotlib.pyplot as plt
 import numpy as np
 from IPython.display import display
@@ -7,9 +9,13 @@ from ipywidgets import HBox, IntSlider, interactive_output
 from PIL import Image
 
 from imgarr.digital_number import num2img
-from imgarr.image_manipulation import (align_horizontal_center,
-                                       get_concat_horizontal,
-                                       get_concat_vertical)
+from imgarr.image_manipulation import (
+    align_horizontal_center,
+    get_concat_horizontal,
+    get_concat_vertical,
+    save_as_gif,
+    save_as_video,
+)
 
 ___all__ = ["InteractiveFigure", "ishow"]
 
@@ -42,9 +48,15 @@ class InteractiveFigure:
     def _showPIL(self, t: int) -> None:
         display(self.imgs[t])  # type: ignore
 
+    def save_as_gif(self, save_path: Union[str, Path], loop: int = 0):
+        return save_as_gif(self.imgs, save_path, loop=loop)
+
+    def save_as_video(self, save_path: Union[str, Path], fps: float = 2.0):
+        return save_as_video(self.imgs, save_path, fps)
+
 
 # Show images interactively
-def ishow(
+def show(
     imgs: List[List[Union[Image.Image, np.ndarray]]],
     layout: Optional[Tuple[int, int]] = None,
     setFrame: bool = False,
@@ -59,6 +71,10 @@ def ishow(
     for i in range(len(imgs)):
         if len(imgs[i]) != len(imgs[0]):
             raise ValueError(f"imgs[{i}] is a different length from imgs[0].")
+        # Preprocess. np.ndarray is handled as float only.
+        if type(imgs[i][0]) == np.ndarray and imgs[i][0].dtype == np.uint8:
+            for j in range(len(imgs[i])):
+                imgs[i][j] = imgs[i][j] / 255
     assert type(imgs[0][0]) == Image.Image or type(imgs[0][0]) == np.ndarray
     mode = "pil" if type(imgs[0][0]) == Image.Image else "np"
     frame_length = len(imgs[0])
