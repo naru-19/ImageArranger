@@ -10,7 +10,6 @@ To display PIL images interactively.
 ```python
 # test_ishow.ipynb
 import imgarr.interactive_plot as iplt
-import matplotlib.pyplot as plt
 import numpy as np
 from PIL import Image
 
