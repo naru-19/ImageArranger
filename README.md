@@ -9,32 +9,26 @@ pip install git+https://github.com/naru-19/ImageArranger
 To display PIL images interactively.
 ```python
 # test_ishow.ipynb
-import imgarr
+import imgarr.interactive_plot as iplt
+import matplotlib.pyplot as plt
 import numpy as np
 from PIL import Image
 
-red = np.zeros((200, 100, 3))
-red[:, :, 0] = 0.5
 imgs0 = [
-    Image.fromarray(((red + 0.5 * i / 5) * 255).astype(np.uint8)) for i in range(5)
+    Image.fromarray((np.zeros((150, 100, 3)) + i / 5 * 255).astype(np.uint8))
+    for i in range(5)
 ]
 imgs1 = [
-    Image.fromarray(
-        ((np.zeros((100, 100, 3)) + 0.7 * (1 - i / 5)) * 255).astype(np.uint8)
-    )
+    Image.fromarray(((np.ones((100, 150, 3)) - 0.2 - i / 5) * 255).astype(np.uint8))
     for i in range(5)
 ]
-imgs2 = [
-    Image.fromarray(((np.zeros((200, 300, 3)) + 0.5 * i / 5) * 255).astype(np.uint8))
-    for i in range(5)
-]
-ifig = imgarr.ishow([imgs0, imgs1, imgs2], setFrame=True, layout=None)
+ifig = iplt.show([imgs0, imgs1], setFrame=True)
+ifig.save_as_gif("../imgs/test.gif")
+ifig.save_as_video("../imgs/test.mp4", fps=2.0)
 
 ```
-<img src="imgs/demo_ishow.gif" width=100%>
+<img src="imgs/demo_show.gif" width=100%>
 You can also use np.ndarray images in the same way.
-
-- [ ] implement save method.
 
 ## concat, align
 concat
