@@ -1,6 +1,7 @@
 from pathlib import Path
 from typing import List, Optional, Tuple, Union
 
+import cv2
 import matplotlib.pyplot as plt
 import numpy as np
 from IPython.display import display
@@ -8,9 +9,13 @@ from ipywidgets import HBox, IntSlider, interactive_output
 from PIL import Image
 
 from imgarr.digital_number import num2img
-from imgarr.image_manipulation import (align_horizontal_center,
-                                       get_concat_horizontal,
-                                       get_concat_vertical, save_as_gif)
+from imgarr.image_manipulation import (
+    align_horizontal_center,
+    get_concat_horizontal,
+    get_concat_vertical,
+    save_as_gif,
+    save_as_video,
+)
 
 ___all__ = ["InteractiveFigure", "ishow"]
 
@@ -44,7 +49,10 @@ class InteractiveFigure:
         display(self.imgs[t])  # type: ignore
 
     def save_as_gif(self, save_path: Union[str, Path], loop: int = 0):
-        save_as_gif(self.imgs, save_path, loop=loop)
+        return save_as_gif(self.imgs, save_path, loop=loop)
+
+    def save_as_video(self, save_path: Union[str, Path], fps: float = 2.0):
+        return save_as_video(self.imgs, save_path, fps)
 
 
 # Show images interactively

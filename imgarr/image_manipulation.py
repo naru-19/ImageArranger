@@ -1,8 +1,11 @@
 from pathlib import Path
 from typing import List, Union
 
+import cv2
+import imageio
 import numpy as np
 from PIL import Image
+from tqdm import tqdm
 
 __all__ = [
     "get_concat_horizontal",
@@ -158,7 +161,7 @@ def save_as_gif(
     imgs: List[Union[np.ndarray, Image.Image]],
     save_path: Union[str, Path],
     loop: int = 0,
-) -> None:
+) -> bool:
     save_path = Path(save_path)
     assert save_path.suffix in {".gif", ".GIF"}, f"Unkown file type {save_path.suffix}"
     # Convert np.ndarry to PIL.
@@ -170,3 +173,38 @@ def save_as_gif(
     save_path.parent.mkdir(parents=True, exist_ok=True)
     imgs[0].save(save_path, save_all=True, append_images=imgs[1:], loop=loop)
     print(f"GIF saved {save_path}")
+    return True
+
+
+def save_as_video(
+    imgs: List[Union[Image.Image, np.ndarray]],
+    save_path: Union[str, Path],
+    fps: float = 2.0,
+) -> bool:
+    Path(save_path).parent.mkdir(exist_ok=True, parents=True)
+    if type(imgs[0]) == Image.Image:
+        return _pil_imgs_to_video(imgs=imgs, save_path=save_path, fps=fps)
+    else:
+        if imgs[0].dtype == np.uint8:
+            return _pil_imgs_to_video(imgs=imgs, save_path=save_path, fps=fps)
+        else:
+            return _np_imgs_to_video(imgs=imgs, save_path=save_path, fps=fps)
+
+
+def _pil_imgs_to_video(
+    imgs: List[Image.Image], save_path: Union[str, Path], fps: float
+) -> bool:
+    imageio.mimsave(
+        str(save_path), [np.array(img) for img in imgs], fps=fps, macro_block_size=1
+    )
+    print(f"Video saved {save_path}")
+    return True
+
+
+def _np_imgs_to_video(
+    imgs: List[Image.Image], save_path: Union[str, Path], fps: float
+) -> bool:
+    imgs_pil = [
+        img if img.dtype == np.uint8 else (img * 255).astype(np.uint8) for img in imgs
+    ]
+    return _pil_imgs_to_video(imgs=imgs_pil, save_path=save_path, fps=fps)
