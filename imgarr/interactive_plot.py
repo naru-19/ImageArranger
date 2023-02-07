@@ -10,10 +10,13 @@ from ipywidgets import HBox, IntSlider, interactive_output
 from PIL import Image
 
 from imgarr.digital_number import num2img
-from imgarr.image_manipulation import (align_horizontal_center,
-                                       get_concat_horizontal,
-                                       get_concat_vertical, save_as_gif,
-                                       save_as_video)
+from imgarr.image_manipulation import (
+    align_horizontal_center,
+    get_concat_horizontal,
+    get_concat_vertical,
+    save_as_gif,
+    save_as_video,
+)
 
 ___all__ = ["InteractiveFigure", "ishow"]
 
@@ -69,14 +72,38 @@ def _check(imgs: List[List[Union[Image.Image, np.ndarray]]]) -> None:
 
 
 def _preprocess(
-    imgs: List[List[Union[Image.Image, np.ndarray]]]
+    imgs: List[List[Union[Image.Image, np.ndarray]]], mode: str, row: int, col: int
 ) -> List[List[Union[Image.Image, np.ndarray]]]:
+    frame_length = len(imgs[0])
     # Preprocess. np.ndarray is handled as float only.
     _imgs = imgs.copy()
     for i in range(len(imgs)):
         for j in range(len(imgs[i])):
             if type(imgs[i][j]) == np.ndarray and imgs[i][j].dtype == np.uint8:
                 _imgs[i][j] = _imgs[i][j] / 255
+
+    # add dammy
+    if mode == "pil":
+        dammy = Image.new("RGB", (1, 1))
+    else:
+        dammy = np.ones((1, 1, 3))
+    for i in range(len(_imgs), col * row):
+        _imgs.append([dammy for _ in range(frame_length)])
+
+    # Width of each column. Used to align each column.
+    col_width = [
+        max([np.array(_imgs[i + j * col][0]).shape[1] for j in range(row)])
+        for i in range(col)
+    ]
+
+    # Align each image horizontal center.
+    _imgs = [
+        [
+            align_horizontal_center(_imgs[i][j], w=col_width[i % col])
+            for j in range(frame_length)
+        ]
+        for i in range(len(_imgs))
+    ]
     return _imgs
 
 
@@ -86,7 +113,7 @@ def _get_digit_img(
     # Get digital number.
     digit_img = num2img(n=num, fix_digit=len(str(frame_length)), size=(size, size))
     if mode == "pil":
-        digit_img=Image.fromarray((digit_img * 255).astype(np.uint8))
+        digit_img = Image.fromarray((digit_img * 255).astype(np.uint8))
     return digit_img
 
 
@@ -104,55 +131,35 @@ def show(
         interactive figure
     """
 
-    # Check the iamges and preprocess
-    _check(imgs)
-    _imgs = _preprocess(imgs)
-    frame_length, frame_imgs = len(_imgs[0]), []
-    # Image type information.
-    mode = "pil" if type(imgs[0][0]) == Image.Image else "np"
-
     # Get row, col
-    if layout:
-        col, row = layout
-    else:
-        col, row = len(_imgs), 1
+    if layout is None:
+        layout = (len(imgs), 1)
+    col, row = layout
     assert col * row >= len(
-        _imgs
+        imgs
     ), f"row x col ({row}x{col}) is smaller than the length of imgs."
-    while col * (row - 1) > len(_imgs):
+    while col * (row - 1) > len(imgs):
         row -= 1
 
-    # add dammy
-    if mode == "pil":
-        dammy = Image.new("RGB", (1, 1))
-    else:
-        dammy = np.ones((1, 1, 3))
-    for i in range(len(_imgs), col * row):
-        _imgs.append([dammy for _ in range(len(_imgs[0]))])
+    # Get image type
+    mode = "pil" if type(imgs[0][0]) == Image.Image else "np"
 
-    # Width of each column. Used to align each column.
-    col_width = [
-        max([np.array(_imgs[i + j * col][0]).shape[1] for j in range(row)])
-        for i in range(col)
-    ]
-    # Before concat, align each image horizontal center.
-    _imgs = [
-        [
-            align_horizontal_center(_imgs[i][j], w=col_width[i % col])
-            for j in range(frame_length)
-        ]
-        for i in range(len(_imgs))
-    ]
+    # Check the iamges and preprocess
+    _check(imgs)
+    _imgs = _preprocess(imgs=imgs, mode=mode, row=row, col=col)
+    frame_length, frame_imgs = len(_imgs[0]), []
+
     # Generate each frame img.
     for i in range(frame_length):
         # Treat each frame as a single image.
+        # Collect images at frame i.
         frame_parts = [_imgs[j][i] for j in range(len(_imgs))]
         line_imgs = [
             get_concat_horizontal(frame_parts[j * col : (j + 1) * col], margin=20)
             for j in range(row)
         ]
         frame_img = get_concat_vertical(line_imgs, margin=20)
-        # Set visualize frame index
+        # Visualize frame index
         if setFrame:
             digit_size = int(np.array(frame_img).shape[0] * 0.8)
             digit_img = _get_digit_img(
