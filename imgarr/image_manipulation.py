@@ -53,7 +53,10 @@ def get_concat_horizontal(
         return Image.fromarray(dst.astype(np.uint8))
     else:
         return dst
+
+
 # TODO implement insert margin ↓↑
+
 
 def get_concat_vertical(
     imgs: List[Union[Image.Image, np.ndarray]], alignAuto: bool = True, margin: int = 0
@@ -112,13 +115,15 @@ def align_vertical_center(
     if _h == h:
         return img
     elif _h > h:
-        raise ValueError(f"Target image height {_h} is larger than the draw area height {h}.")
+        raise ValueError(
+            f"Target image height {_h} is larger than the draw area height {h}."
+        )
     padding_top = (h - _h) // 2
     dst = np.ones((h, _w, 3))
     if img_np.dtype == np.uint8:
         dst = (dst * 255).astype(np.uint8)
         dst[padding_top : padding_top + _h, :_w] = img_np
-        if type(img)==Image.Image:
+        if type(img) == Image.Image:
             return Image.fromarray(dst)
         else:
             return dst
@@ -142,13 +147,15 @@ def align_horizontal_center(
     if _w == w:
         return img
     elif _w > w:
-        raise ValueError(f"Target image width {_w} is larger than the draw area width {w}.")
+        raise ValueError(
+            f"Target image width {_w} is larger than the draw area width {w}."
+        )
     padding_left = (w - _w) // 2
     dst = np.ones((_h, w, 3))
     if img_np.dtype == np.uint8:
         dst = (dst * 255).astype(np.uint8)
         dst[:_h, padding_left : padding_left + _w] = img_np
-        if type(img)==Image.Image:
+        if type(img) == Image.Image:
             return Image.fromarray(dst)
         else:
             return dst

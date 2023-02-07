@@ -4,6 +4,19 @@ pip install git+https://github.com/naru-19/ImageArranger
 ```
 
 # usage
+
+## digital number
+```python
+import imgarr.digital_number as digitn
+import matplotlib.pyplot as plt
+
+plt.imshow(digitn.num2img(n=15, size=(70, 50), fix_digit=3))
+plt.axis("off")
+plt.savefig("../imgs/demo_digit.png")
+
+```
+<img src="imgs/demo_digit.png" width=50%>
+
 ## interactive_show
 
 To display PIL images interactively.
@@ -41,12 +54,11 @@ img0 = np.zeros((50, 100, 3)) + 0.2
 img1 = np.zeros((100, 50, 3)) + 0.8
 
 plt.imshow(imgarr.get_concat_horizontal([img0, img1], margin=10))
-plt.axis("off")
 
 ```
 <img src="imgs/demo_concat.png">
-align
 
+align
 ```python
 import imgarr
 import matplotlib.pyplot as plt
@@ -55,7 +67,6 @@ import numpy as np
 img0 = np.zeros((50, 100, 3)) + 0.2
 
 plt.imshow(imgarr.align_center(img0, w=120, h=100))
-plt.axis("off")
 
 ```
 <img src="imgs/demo_align.png">

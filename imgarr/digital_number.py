@@ -15,7 +15,7 @@ def num2img(
     params:
         n: Target number to rendering.
         fix_digit: Fix the number of display digit.
-        size: size (h x w)
+        size: size (w x h)
     return:
         digit: The digital number of n
     """
@@ -36,7 +36,7 @@ def num2img(
     if size:
         h, w, _ = digit.shape
         digit = cv2.resize(
-            digit, None, None, size[1] / w, size[0] / h, cv2.INTER_NEAREST
+            digit, None, None, size[0] / w, size[1] / h, cv2.INTER_NEAREST
         )
     return digit
 
