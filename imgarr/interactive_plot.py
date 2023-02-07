@@ -9,13 +9,10 @@ from ipywidgets import HBox, IntSlider, interactive_output
 from PIL import Image
 
 from imgarr.digital_number import num2img
-from imgarr.image_manipulation import (
-    align_horizontal_center,
-    get_concat_horizontal,
-    get_concat_vertical,
-    save_as_gif,
-    save_as_video,
-)
+from imgarr.image_manipulation import (align_horizontal_center,
+                                       get_concat_horizontal,
+                                       get_concat_vertical, save_as_gif,
+                                       save_as_video)
 
 ___all__ = ["InteractiveFigure", "ishow"]
 
@@ -64,18 +61,18 @@ def show(
     """
     params:
         imgs: [imgs_1, imgs_2, ..., imgs_n]
-        layout: Arrange the images(w,h). 'None' is horizontal.
+        layout: Layout of the images(w,h). 'None' is horizontal.
     return:
         interactive figure
     """
+    # Preprocess. np.ndarray is handled as float only in this function.
     for i in range(len(imgs)):
         if len(imgs[i]) != len(imgs[0]):
             raise ValueError(f"imgs[{i}] is a different length from imgs[0].")
-        # Preprocess. np.ndarray is handled as float only.
+        assert type(imgs[i][0]) == Image.Image or type(imgs[i][0]) == np.ndarray    
         if type(imgs[i][0]) == np.ndarray and imgs[i][0].dtype == np.uint8:
             for j in range(len(imgs[i])):
                 imgs[i][j] = imgs[i][j] / 255
-    assert type(imgs[0][0]) == Image.Image or type(imgs[0][0]) == np.ndarray
     mode = "pil" if type(imgs[0][0]) == Image.Image else "np"
     frame_length = len(imgs[0])
     frame_imgs = []
@@ -96,7 +93,7 @@ def show(
             ]
         imgs.append(digit_imgs)
 
-    # Arrange in row x col
+    # Get row, col
     if layout:
         col, row = layout
     else:
@@ -112,12 +109,13 @@ def show(
     for i in range(len(imgs), col * row):
         imgs.append([dammy for _ in range(len(imgs[0]))])
 
-    # Width of each column
+    # Width of each column. Used to align each column.
     col_width = [
         max([np.array(imgs[i + j * col][0]).shape[1] for j in range(row)])
         for i in range(col)
     ]
     for i in range(frame_length):
+        # Treat each frame as a single image.
         frame_imgs.append(
             get_concat_vertical(
                 [

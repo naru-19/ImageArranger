@@ -27,11 +27,13 @@ def get_concat_horizontal(
     return:
         dst: Concatenated image.
     """
+    # Preprocess. Convert each image to np.ndarray.
     imgs_np = [np.array(img) for img in imgs]
+    # The margin between each image.
     margin_np = np.ones((1, margin, 3))
     if type(imgs[0]) == Image.Image:
         margin_np = (margin_np * 255).astype(np.uint8)
-    # Insert margin between each image.
+    # Insert margin.
     imgs_np = [margin_np] + [
         imgs_np[i // 2] if i % 2 == 0 else margin_np for i in range(len(imgs_np) * 2)
     ]
@@ -40,7 +42,7 @@ def get_concat_horizontal(
     W = sum([img.shape[1] for img in imgs_np])
     dst = np.ones((H, W, 3))
     pivotW = 0
-    # Concatenate each image.
+    # Fill pixels by each image.
     for img in imgs_np:
         if alignAuto:
             dst[:, pivotW : pivotW + img.shape[1]] = align_vertical_center(img, H)
@@ -51,7 +53,7 @@ def get_concat_horizontal(
         return Image.fromarray(dst.astype(np.uint8))
     else:
         return dst
-
+# TODO implement insert margin ↓↑
 
 def get_concat_vertical(
     imgs: List[Union[Image.Image, np.ndarray]], alignAuto: bool = True, margin: int = 0
@@ -64,11 +66,13 @@ def get_concat_vertical(
     return:
         dst: Concatenated image.
     """
+    # Preprocess. Convert each image to np.ndarray.
     imgs_np = [np.array(img) for img in imgs]
+    # The margin between each image.
     margin_np = np.ones((margin, 1, 3))
     if type(imgs[0]) == Image.Image:
         margin_np = (margin_np * 255).astype(np.uint8)
-    # Insert margin between each image.
+    # Insert margin.
     imgs_np = [margin_np] + [
         imgs_np[i // 2] if i % 2 == 0 else margin_np for i in range(len(imgs_np) * 2)
     ]
@@ -107,12 +111,17 @@ def align_vertical_center(
     _h, _w, _ = img_np.shape
     if _h == h:
         return img
+    elif _h > h:
+        raise ValueError(f"Target image height {_h} is larger than the draw area height {h}.")
     padding_top = (h - _h) // 2
     dst = np.ones((h, _w, 3))
     if img_np.dtype == np.uint8:
         dst = (dst * 255).astype(np.uint8)
         dst[padding_top : padding_top + _h, :_w] = img_np
-        return Image.fromarray(dst)
+        if type(img)==Image.Image:
+            return Image.fromarray(dst)
+        else:
+            return dst
     else:
         dst[padding_top : padding_top + _h, :_w] = img_np
         return dst
@@ -132,12 +141,17 @@ def align_horizontal_center(
     _h, _w, _ = img_np.shape
     if _w == w:
         return img
+    elif _w > w:
+        raise ValueError(f"Target image width {_w} is larger than the draw area width {w}.")
     padding_left = (w - _w) // 2
     dst = np.ones((_h, w, 3))
     if img_np.dtype == np.uint8:
         dst = (dst * 255).astype(np.uint8)
         dst[:_h, padding_left : padding_left + _w] = img_np
-        return Image.fromarray(dst)
+        if type(img)==Image.Image:
+            return Image.fromarray(dst)
+        else:
+            return dst
     else:
         dst[:_h, padding_left : padding_left + _w] = img_np
         return dst
