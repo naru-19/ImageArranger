@@ -52,6 +52,49 @@ class InteractiveFigure:
         return save_as_video(self.imgs, save_path, fps)
 
 
+def _check(imgs: List[List[Union[Image.Image, np.ndarray]]]) -> None:
+    # Check the length of imgs_i.
+    for i in range(len(imgs)):
+        assert len(imgs[0]) == len(
+            imgs[i]
+        ), f"imgs[{i}] is a different length from imgs[0]."
+
+    # Check the type of all imgs.
+    for i in range(len(imgs)):
+        for j in range(len(imgs[i])):
+            assert type(imgs[i][j]) == type(
+                imgs[0][0]
+            ), f"All image type must be same! Type of imgs[{i}][{j}] and imgs[0][0] is not the same."
+
+
+def _preprocess(
+    imgs: List[List[Union[Image.Image, np.ndarray]]]
+) -> List[List[Union[Image.Image, np.ndarray]]]:
+    # Preprocess. np.ndarray is handled as float only.
+    _imgs = imgs.copy()
+    for i in range(len(imgs)):
+        for j in range(len(imgs[i])):
+            if type(imgs[i][j]) == np.ndarray and imgs[i][j].dtype == np.uint8:
+                _imgs[i][j] = _imgs[i][j] / 255
+    return _imgs
+
+
+def _get_digit_imgs(
+    frmae_length: int, size: int, mode: str = ""
+) -> List[Union[Image.Image, np.ndarray]]:
+    # Get digital number.
+    digit_imgs = [
+        num2img(n=i, fix_digit=len(str(frame_length)), size=(size, size))
+        for i in range(frame_length + 1)
+    ]
+    if mode == "pil":
+        digit_imgs = [
+            Image.fromarray((digit_img * 255).astype(np.uint8))
+            for digit_img in digit_imgs
+        ]
+    return digit_imgs
+
+
 # Show images interactively
 def show(
     imgs: List[List[Union[Image.Image, np.ndarray]]],
@@ -60,45 +103,33 @@ def show(
 ) -> InteractiveFigure:
     """
     params:
-        imgs: [imgs_1, imgs_2, ..., imgs_n]
+        imgs: [imgs_1, imgs_2, ..., imgs_n].
         layout: Layout of the images(w,h). 'None' is horizontal.
     return:
         interactive figure
     """
-    # Preprocess. np.ndarray is handled as float only in this function.
-    for i in range(len(imgs)):
-        if len(imgs[i]) != len(imgs[0]):
-            raise ValueError(f"imgs[{i}] is a different length from imgs[0].")
-        assert type(imgs[i][0]) == Image.Image or type(imgs[i][0]) == np.ndarray    
-        if type(imgs[i][0]) == np.ndarray and imgs[i][0].dtype == np.uint8:
-            for j in range(len(imgs[i])):
-                imgs[i][j] = imgs[i][j] / 255
+
+    # Check the iamges and preprocess
+    _check(imgs)
+    _imgs = _preprocess(imgs)
+    # Image type information.
     mode = "pil" if type(imgs[0][0]) == Image.Image else "np"
-    frame_length = len(imgs[0])
-    frame_imgs = []
+
+    frame_length, frame_imgs = len(_imgs[0]), []
     # Set visualize frame index
     if setFrame:
-        if mode == "pil":
-            size = min(imgs[0][0].size)
-        else:
-            size = min(imgs[0][0].shape[:2])
-        digit_imgs = [
-            num2img(n=i, fix_digit=len(str(frame_length)), size=(size, size))
-            for i in range(frame_length + 1)
-        ]
-        if mode == "pil":
-            digit_imgs = [
-                Image.fromarray((digit_img * 255).astype(np.uint8))
-                for digit_img in digit_imgs
-            ]
-        imgs.append(digit_imgs)
+        digit_size = min(np.array(_imgs[0][0]).shape[:2])
+        digit_imgs = _get_digit_imgs(
+            frmae_length=frmae_length, size=digit_size, mode=mode
+        )
+        _imgs.append(digit_imgs)
 
     # Get row, col
     if layout:
         col, row = layout
     else:
-        col, row = len(imgs), 1
-    while col * (row - 1) > len(imgs):
+        col, row = len(_imgs), 1
+    while col * (row - 1) > len(_imgs):
         row -= 1
 
     # add dammy
@@ -106,33 +137,32 @@ def show(
         dammy = Image.new("RGB", (1, 1))
     else:
         dammy = np.ones((1, 1, 3))
-    for i in range(len(imgs), col * row):
-        imgs.append([dammy for _ in range(len(imgs[0]))])
+    for i in range(len(_imgs), col * row):
+        _imgs.append([dammy for _ in range(len(_imgs[0]))])
 
     # Width of each column. Used to align each column.
     col_width = [
-        max([np.array(imgs[i + j * col][0]).shape[1] for j in range(row)])
+        max([np.array(_imgs[i + j * col][0]).shape[1] for j in range(row)])
         for i in range(col)
     ]
+    # Before concat, align each image horizontal center.
+    _imgs = [
+        [
+            align_horizontal_center(_imgs[j][i], w=col_width[j % col])
+            for j in range(len(_igms))
+        ]
+        for i in range(frame_length)
+    ]
+    # Gen each frame img.
     for i in range(frame_length):
         # Treat each frame as a single image.
-        frame_imgs.append(
-            get_concat_vertical(
-                [
-                    get_concat_horizontal(
-                        [
-                            align_horizontal_center(
-                                imgs[k][i], w=col_width[k - j * col]
-                            )
-                            for k in range(j * col, col * (j + 1))
-                        ],
-                        margin=20,
-                    )
-                    for j in range(row)
-                ],
-                margin=20,
-            )
-        )
+        frame_parts = [_imgs[j][i] for j in range(len(_imgs))]
+        line_imgs = [
+            get_concat_horizontal(frame_parts[j * col : (j + 1) * col], margin=20)
+            for j in range(row)
+        ]
+        frame_img = get_concat_vertical(line_imgs, margin=20)
+        frame_imgs.append(frame_img)
     ifig = InteractiveFigure(frame_imgs)
     ifig.show()
     return ifig
