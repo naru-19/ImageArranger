@@ -1,3 +1,4 @@
+import warnings
 from pathlib import Path
 from typing import List, Optional, Tuple, Union
 
@@ -9,10 +10,13 @@ from ipywidgets import HBox, IntSlider, interactive_output
 from PIL import Image
 
 from imgarr.digital_number import num2img
-from imgarr.image_manipulation import (align_horizontal_center,
-                                       get_concat_horizontal,
-                                       get_concat_vertical, save_as_gif,
-                                       save_as_video)
+from imgarr.image_manipulation import (
+    align_horizontal_center,
+    get_concat_horizontal,
+    get_concat_vertical,
+    save_as_gif,
+    save_as_video,
+)
 
 ___all__ = ["InteractiveFigure", "ishow"]
 
@@ -79,20 +83,14 @@ def _preprocess(
     return _imgs
 
 
-def _get_digit_imgs(
-    frame_length: int, size: int, mode: str = ""
-) -> List[Union[Image.Image, np.ndarray]]:
+def _get_digit_img(
+    num: int, frame_length: int, size: int, mode: str = ""
+) -> Union[Image.Image, np.ndarray]:
     # Get digital number.
-    digit_imgs = [
-        num2img(n=i, fix_digit=len(str(frame_length)), size=(size, size))
-        for i in range(frame_length + 1)
-    ]
+    digit_img = num2img(n=num, fix_digit=len(str(frame_length)), size=(size, size))
     if mode == "pil":
-        digit_imgs = [
-            Image.fromarray((digit_img * 255).astype(np.uint8))
-            for digit_img in digit_imgs
-        ]
-    return digit_imgs
+        Image.fromarray((digit_img * 255).astype(np.uint8))
+    return digit_img
 
 
 # Show images interactively
@@ -112,23 +110,17 @@ def show(
     # Check the iamges and preprocess
     _check(imgs)
     _imgs = _preprocess(imgs)
+    frame_length, frame_imgs = len(_imgs[0]), []
     # Image type information.
     mode = "pil" if type(imgs[0][0]) == Image.Image else "np"
-
-    frame_length, frame_imgs = len(_imgs[0]), []
-    # Set visualize frame index
-    if setFrame:
-        digit_size = min(np.array(_imgs[0][0]).shape[:2])
-        digit_imgs = _get_digit_imgs(
-            frame_length=frame_length, size=digit_size, mode=mode
-        )
-        _imgs.append(digit_imgs)
 
     # Get row, col
     if layout:
         col, row = layout
     else:
         col, row = len(_imgs), 1
+    if col * row < len(_imgs):
+        warnings.warn("You should set valid 'layout' value.")
     while col * (row - 1) > len(_imgs):
         row -= 1
 
@@ -152,7 +144,6 @@ def show(
             for j in range(frame_length)
         ]
         for i in range(len(_imgs))
-        
     ]
     # Gen each frame img.
     for i in range(frame_length):
@@ -163,6 +154,13 @@ def show(
             for j in range(row)
         ]
         frame_img = get_concat_vertical(line_imgs, margin=20)
+        # Set visualize frame index
+        if setFrame:
+            digit_size = int(np.array(frame_img).shape[1] * 0.8)
+            digit_img = _get_digit_img(
+                num=i, frame_length=frame_length, size=digit_size, mode=mode
+            )
+            frame_img = get_concat_horizontal([frame_img, digit_img], margin=20)
         frame_imgs.append(frame_img)
     ifig = InteractiveFigure(frame_imgs)
     ifig.show()
