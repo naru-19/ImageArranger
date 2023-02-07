@@ -84,3 +84,25 @@ def test_05():
     ifig = iplt.show([imgs0, imgs1, imgs2, imgs3], setFrame=True, layout=(3, 2))
     assert ifig.save_as_gif("./imgs/test.gif")
     assert ifig.save_as_video("./imgs/test.mp4", fps=2.0)
+
+
+# layout test with numpy type imgs.
+def test_06():
+    imgs0 = [np.zeros((150, 100, 3)) + i / 5 for i in range(5)]
+    imgs1 = [np.ones((100, 150, 3)) - 0.2 - i / 5 for i in range(5)]
+    imgs2 = [np.zeros((100, 100, 3)) + i / 5 for i in range(5)]
+    imgs3 = [np.ones((150, 150, 3)) - 0.2 - i / 5 for i in range(5)]
+    ifig = iplt.show([imgs0, imgs1, imgs2, imgs3], setFrame=False, layout=(2, 2))
+    assert ifig.save_as_gif("./imgs/test.gif")
+    assert ifig.save_as_video("./imgs/test.mp4", fps=2.0)
+
+
+# layout test with numpy type imgs.
+def test_07():
+    imgs0 = [np.zeros((150, 100, 3)) + i / 5 for i in range(5)]
+    imgs1 = [np.ones((100, 150, 3)) - 0.2 - i / 5 for i in range(5)]
+    imgs2 = [np.zeros((100, 100, 3)) + i / 5 for i in range(5)]
+    imgs3 = [np.ones((150, 150, 3)) - 0.2 - i / 5 for i in range(5)]
+    ifig = iplt.show([imgs0, imgs1, imgs2, imgs3], setFrame=True, layout=(2, 2))
+    assert ifig.save_as_gif("./imgs/test.gif")
+    assert ifig.save_as_video("./imgs/test.mp4", fps=2.0)
