@@ -148,10 +148,11 @@ def show(
     # Before concat, align each image horizontal center.
     _imgs = [
         [
-            align_horizontal_center(_imgs[j][i], w=col_width[j % col])
-            for j in range(len(_imgs))
+            align_horizontal_center(_imgs[i][j], w=col_width[i % col])
+            for j in range(frame_length)
         ]
-        for i in range(frame_length)
+        for i in range(len(_imgs))
+        
     ]
     # Gen each frame img.
     for i in range(frame_length):
