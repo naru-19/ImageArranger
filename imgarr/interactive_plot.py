@@ -10,13 +10,10 @@ from ipywidgets import HBox, IntSlider, interactive_output
 from PIL import Image
 
 from imgarr.digital_number import num2img
-from imgarr.image_manipulation import (
-    align_horizontal_center,
-    get_concat_horizontal,
-    get_concat_vertical,
-    save_as_gif,
-    save_as_video,
-)
+from imgarr.image_manipulation import (align_horizontal_center,
+                                       get_concat_horizontal,
+                                       get_concat_vertical, save_as_gif,
+                                       save_as_video)
 
 ___all__ = ["InteractiveFigure", "ishow"]
 
@@ -89,7 +86,7 @@ def _get_digit_img(
     # Get digital number.
     digit_img = num2img(n=num, fix_digit=len(str(frame_length)), size=(size, size))
     if mode == "pil":
-        Image.fromarray((digit_img * 255).astype(np.uint8))
+        digit_img=Image.fromarray((digit_img * 255).astype(np.uint8))
     return digit_img
 
 
@@ -119,8 +116,9 @@ def show(
         col, row = layout
     else:
         col, row = len(_imgs), 1
-    if col * row < len(_imgs):
-        warnings.warn("You should set valid 'layout' value.")
+    assert col * row >= len(
+        _imgs
+    ), f"row x col ({row}x{col}) is smaller than the length of imgs."
     while col * (row - 1) > len(_imgs):
         row -= 1
 
@@ -145,7 +143,7 @@ def show(
         ]
         for i in range(len(_imgs))
     ]
-    # Gen each frame img.
+    # Generate each frame img.
     for i in range(frame_length):
         # Treat each frame as a single image.
         frame_parts = [_imgs[j][i] for j in range(len(_imgs))]
@@ -156,7 +154,7 @@ def show(
         frame_img = get_concat_vertical(line_imgs, margin=20)
         # Set visualize frame index
         if setFrame:
-            digit_size = int(np.array(frame_img).shape[1] * 0.8)
+            digit_size = int(np.array(frame_img).shape[0] * 0.8)
             digit_img = _get_digit_img(
                 num=i, frame_length=frame_length, size=digit_size, mode=mode
             )
