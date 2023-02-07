@@ -80,7 +80,7 @@ def _preprocess(
 
 
 def _get_digit_imgs(
-    frmae_length: int, size: int, mode: str = ""
+    frame_length: int, size: int, mode: str = ""
 ) -> List[Union[Image.Image, np.ndarray]]:
     # Get digital number.
     digit_imgs = [
@@ -120,7 +120,7 @@ def show(
     if setFrame:
         digit_size = min(np.array(_imgs[0][0]).shape[:2])
         digit_imgs = _get_digit_imgs(
-            frmae_length=frmae_length, size=digit_size, mode=mode
+            frame_length=frame_length, size=digit_size, mode=mode
         )
         _imgs.append(digit_imgs)
 
@@ -149,7 +149,7 @@ def show(
     _imgs = [
         [
             align_horizontal_center(_imgs[j][i], w=col_width[j % col])
-            for j in range(len(_igms))
+            for j in range(len(_imgs))
         ]
         for i in range(frame_length)
     ]
