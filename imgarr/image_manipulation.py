@@ -197,6 +197,26 @@ def save_as_gif(
     return True
 
 
+def _resize_for_video(
+    imgs: List[Union[Image.Image, np.ndarray]]
+) -> List[Union[Image.Image, np.ndarray]]:
+    _imgs = []
+    # imageio can't save h x w video which h%2=1 or w%2=1
+    if type(imgs[0]) == Image.Image:
+        for img in imgs:
+            w, h = img.size
+            _img = Image.new("RGB", (w + w % 2, h + h % 2))
+            _img.paste(img, (0, 0))
+            _imgs.append(_img)
+    else:
+        for img in imgs:
+            h, w, _ = img.shape
+            _img = np.zeros((h + h % 2, w + w % 2, 3), dtype=img.dtype)
+            _img[:h, :w, :] = img
+            _imgs.append(_img)
+    return _imgs
+
+
 def save_as_video(
     imgs: List[Union[Image.Image, np.ndarray]],
     save_path: Union[str, Path],
@@ -204,12 +224,18 @@ def save_as_video(
 ) -> bool:
     Path(save_path).parent.mkdir(exist_ok=True, parents=True)
     if type(imgs[0]) == Image.Image:
-        return _pil_imgs_to_video(imgs=imgs, save_path=save_path, fps=fps)
+        return _pil_imgs_to_video(
+            imgs=_resize_for_video(imgs), save_path=save_path, fps=fps
+        )
     else:
         if imgs[0].dtype == np.uint8:
-            return _pil_imgs_to_video(imgs=imgs, save_path=save_path, fps=fps)
+            return _pil_imgs_to_video(
+                imgs=_resize_for_video(imgs), save_path=save_path, fps=fps
+            )
         else:
-            return _np_imgs_to_video(imgs=imgs, save_path=save_path, fps=fps)
+            return _np_imgs_to_video(
+                imgs=_resize_for_video(imgs), save_path=save_path, fps=fps
+            )
 
 
 def _pil_imgs_to_video(
