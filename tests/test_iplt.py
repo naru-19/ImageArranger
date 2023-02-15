@@ -18,6 +18,20 @@ def test_01():
     ifig = iplt.show([imgs0, imgs1], setFrame=True)
     assert ifig.save_as_gif("./imgs/test.gif")
     assert ifig.save_as_video("./imgs/test.mp4", fps=2.0)
+    
+    # test with PIL odd size imgs
+def test_01_odd():
+    imgs0 = [
+        Image.fromarray((np.zeros((151, 100, 3)) + i / 5 * 255).astype(np.uint8))
+        for i in range(5)
+    ]
+    imgs1 = [
+        Image.fromarray(((np.ones((100, 150, 3)) - 0.2 - i / 5) * 255).astype(np.uint8))
+        for i in range(5)
+    ]
+    ifig = iplt.show([imgs0, imgs1], setFrame=True)
+    assert ifig.save_as_gif("./imgs/test.gif")
+    assert ifig.save_as_video("./imgs/test.mp4", fps=2.0)
 
 
 # test with numpy type imgs
