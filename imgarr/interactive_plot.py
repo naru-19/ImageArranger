@@ -137,8 +137,6 @@ def _preprocess(
             for imgs_col in _imgs
         ] 
     )
-    print(max_width)
-    print(max_height)
 
 
 
