@@ -11,6 +11,7 @@ from PIL import Image
 
 from imgarr.digital_number import num2img
 from imgarr.image_manipulation import (
+    align_center,
     align_horizontal_center,
     get_concat_horizontal,
     get_concat_vertical,
@@ -70,10 +71,29 @@ def _check(imgs: List[List[Union[Image.Image, np.ndarray]]]) -> None:
                 imgs[0][0]
             ), f"All image type must be same! Type of imgs[{i}][{j}] and imgs[0][0] is not the same."
 
+def resize_max(img,max_size):
+    if isinstance(img,Image.Image):
+        w,h = img.size
+        if w>h:
+            nw = max_size
+            nh = int(max_size*h/w)
+        else:
+            nh = max_size
+            nw = int(max_size*w/h)
+        img = img.resize((nw,nh))
+        return img
+
+    h,w = img.shape[:2]
+    if h > w:
+        img = cv2.resize(img,(max_size,int(max_size*h/w)))
+    else:
+        img = cv2.resize(img,(int(max_size*w/h),max_size))
+    return img
 
 def _preprocess(
-    imgs: List[List[Union[Image.Image, np.ndarray]]], mode: str, row: int, col: int
+    imgs: List[List[Union[Image.Image, np.ndarray]]], mode: str, row: int, col: int,max_size:int=256
 ) -> List[List[Union[Image.Image, np.ndarray]]]:
+
     frame_length = len(imgs[0])
     # Preprocess. np.ndarray is handled as float only.
     _imgs = imgs.copy()
@@ -90,16 +110,42 @@ def _preprocess(
     for i in range(len(_imgs), col * row):
         _imgs.append([dammy for _ in range(frame_length)])
 
-    # Width of each column. Used to align each column.
-    col_width = [
-        max([np.array(_imgs[i + j * col][0]).shape[1] for j in range(row)])
-        for i in range(col)
+    _imgs = [
+        [
+            resize_max(img,max_size)
+            for img in imgs_col
+        ]
+        for imgs_col in _imgs
     ]
+
+    # Width of each column. Used to align each column.
+    max_width = (
+        [
+            max([
+                img.shape[1] if type(img) == np.ndarray else img.size[0]
+                for img in imgs_col
+            ])
+            for imgs_col in _imgs
+        ]
+    )
+    max_height = (
+        [
+            max([
+                img.shape[0] if type(img) == np.ndarray else img.size[1]
+                for img in imgs_col
+            ])
+            for imgs_col in _imgs
+        ] 
+    )
+    print(max_width)
+    print(max_height)
+
+
 
     # Align each image horizontal center.
     _imgs = [
         [
-            align_horizontal_center(_imgs[i][j], w=col_width[i % col])
+            align_center(_imgs[i][j], w=max_width[i], h=max_height[i])
             for j in range(frame_length)
         ]
         for i in range(len(_imgs))
@@ -122,6 +168,7 @@ def show(
     imgs: List[List[Union[Image.Image, np.ndarray]]],
     layout: Optional[Tuple[int, int]] = None,
     setFrame: bool = False,
+    max_size:int = 512
 ) -> InteractiveFigure:
     """
     params:
@@ -146,7 +193,7 @@ def show(
 
     # Check the iamges and preprocess
     _check(imgs)
-    _imgs = _preprocess(imgs=imgs, mode=mode, row=row, col=col)
+    _imgs = _preprocess(imgs=imgs, mode=mode, row=row, col=col,max_size=max_size)
     frame_length, frame_imgs = len(_imgs[0]), []
 
     # Generate each frame img.
@@ -161,7 +208,7 @@ def show(
         frame_img = get_concat_vertical(line_imgs, margin=20)
         # Visualize frame index
         if setFrame:
-            digit_size = int(np.array(frame_img).shape[0] * 0.8)
+            digit_size = int(np.array(frame_img).shape[0] * 0.8)*0.5
             digit_img = _get_digit_img(
                 num=i, frame_length=frame_length, size=digit_size, mode=mode
             )
