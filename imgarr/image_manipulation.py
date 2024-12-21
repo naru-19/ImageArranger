@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import List, Union
+from typing import List, Union, Tuple
 import imageio
 import numpy as np
 from PIL import Image
