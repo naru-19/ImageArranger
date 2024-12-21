@@ -147,7 +147,7 @@ def get_concat_horizontal(
     dst = np.ones((H, W, c), dtype=np.uint8) * np.array(margin_color, dtype=np.uint8)[:c]
     pivotW = 0
     for img in imgs_np:
-        dst[:, pivotW : pivotW + img.shape[1]] = img
+        dst[:, pivotW : pivotW + img.shape[1]] = align_vertical_center(img, H, margin_color)
         pivotW += img.shape[1]
     return ImagePostprocessor.execute(imgs[0], dst)
 
@@ -170,7 +170,7 @@ def get_concat_vertical(
     dst = np.ones((H, W, c), dtype=np.uint8) * np.array(margin_color, dtype=np.uint8)[:c]
     pivotH = 0
     for img in imgs_np:
-        dst[pivotH : pivotH + img.shape[0]] = img
+        dst[pivotH : pivotH + img.shape[0]] = align_horizontal_center(img, W, margin_color)
         pivotH += img.shape[0]
     return ImagePostprocessor.execute(imgs[0], dst)
 
