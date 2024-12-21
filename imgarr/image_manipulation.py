@@ -16,125 +16,62 @@ __all__ = [
 ]
 
 
-def get_concat_horizontal(
-    imgs: List[Union[Image.Image, np.ndarray]], alignAuto: bool = True, margin: int = 0
-) -> Union[Image.Image, np.ndarray]:
-    """
-    params:
-        imgs: List of image to concat.
-        alignAuto: Automatically align each image's vertical center.
-        margin: Margin beween each image.
-    return:
-        dst: Concatenated image.
-    """
-    # Preprocess. Convert each image to np.ndarray.
-    imgs_np = [np.array(img) for img in imgs]
-    # The margin between each image.
-    margin_np = np.ones((1, margin, 3))
-    if type(imgs[0]) == Image.Image:
-        margin_np = (margin_np * 255).astype(np.uint8)
-    # Insert margin.
-    imgs_np = [margin_np] + [
-        imgs_np[i // 2] if i % 2 == 0 else margin_np for i in range(len(imgs_np) * 2)
-    ]
-    # The height/width of the concatenated iamge.
-    H = max([img.shape[0] for img in imgs_np])
-    W = sum([img.shape[1] for img in imgs_np])
-    dst = np.ones((H, W, 3))
-    pivotW = 0
-    # Fill pixels by each image.
-    for img in imgs_np:
-        if alignAuto:
-            dst[:, pivotW : pivotW + img.shape[1]] = align_vertical_center(img, H)
-        else:
-            dst[: img.shape[0], pivotW : pivotW + img.shape[1]] = img
-        pivotW += img.shape[1]
-    if type(imgs[0]) == Image.Image:
-        return Image.fromarray(dst.astype(np.uint8))
-    else:
-        return dst
+# np.uint8でデータを扱うための前処理
+class ImagePrerocessor:
+    preprocess_funcs: List[callable] = ["to_numpy_uint_255", "to_three_dimensional"]
 
-
-# TODO implement insert margin ↓↑
-
-
-def get_concat_vertical(
-    imgs: List[Union[Image.Image, np.ndarray]], alignAuto: bool = True, margin: int = 0
-) -> Union[Image.Image, np.ndarray]:
-    """
-    params:
-        imgs: List of image to concat.
-        alignAuto: Automatically align each image's vertical center.
-        margin: Margin beween each image.
-    return:
-        dst: Concatenated image.
-    """
-    # Preprocess. Convert each image to np.ndarray.
-    imgs_np = [np.array(img) for img in imgs]
-    # The margin between each image.
-    margin_np = np.ones((margin, 1, 3))
-    if type(imgs[0]) == Image.Image:
-        margin_np = (margin_np * 255).astype(np.uint8)
-    # Insert margin.
-    imgs_np = [margin_np] + [
-        imgs_np[i // 2] if i % 2 == 0 else margin_np for i in range(len(imgs_np) * 2)
-    ]
-    # The height/width of the concatenated iamge.
-    H = sum([img.shape[0] for img in imgs_np])
-    W = max([img.shape[1] for img in imgs_np])
-    dst = np.ones((H, W, 3))
-    pivotH = 0
-    # Concatenate each image.
-    for img in imgs_np:
-        if alignAuto:
-            dst[pivotH : pivotH + img.shape[0], :] = align_horizontal_center(img, W)
-        else:
-            dst[
-                pivotH : pivotH + img.shape[0],
-                : img.shape[0],
-            ] = img
-        pivotH += img.shape[0]
-    if type(imgs[0]) == Image.Image:
-        return Image.fromarray(dst.astype(np.uint8))
-    else:
-        return dst
-
-
-def align_vertical_center(
-    img: Union[Image.Image, np.ndarray], h: int
-) -> Union[Image.Image, np.ndarray]:
-    """
-    params:
-        img: Target image to align.
-        h: The hight of the area.
-    return:
-        dst: Aligned image.
-    """
-    img_np = np.array(img)
-    _h, _w, _ = img_np.shape
-    if _h == h:
+    @classmethod
+    def execute(cls, img: Image.Image) -> np.ndarray:
+        for func_name in cls.preprocess_funcs:
+            img = getattr(cls, func_name)(img)
         return img
-    elif _h > h:
-        raise ValueError(
-            f"Target image height {_h} is larger than the draw area height {h}."
-        )
-    padding_top = (h - _h) // 2
-    dst = np.ones((h, _w, 3))
-    if img_np.dtype == np.uint8:
-        dst = (dst * 255).astype(np.uint8)
-        dst[padding_top : padding_top + _h, :_w] = img_np
-        if type(img) == Image.Image:
-            return Image.fromarray(dst)
+
+    @classmethod
+    def to_numpy_uint_255(cls, img: Union[np.ndarray, Image.Image]) -> np.ndarray:
+        if isinstance(img, Image.Image):
+            return np.array(img)
         else:
-            return dst
-    else:
-        dst[padding_top : padding_top + _h, :_w] = img_np
-        return dst
+            if img.dtype == np.uint8:
+                return img
+            else:
+                return (img * 255).astype(np.uint8)
+
+    @classmethod
+    def to_three_dimensional(cls, img: np.ndarray) -> np.ndarray:
+        if len(img.shape) == 2:
+            return img[:, :, np.newaxis]
+        else:
+            return img
+
+
+# np.uint8から、元のデータ型に戻すための後処理
+class ImagePostprocessor:
+    postprocess_funcs: List[callable] = ["to_input_type_image"]
+
+    @classmethod
+    def execute(
+        cls, input_img: Union[np.ndarray, Image.Image], output_img: np.ndarray
+    ) -> Union[np.ndarray, Image.Image]:
+        for func_name in cls.postprocess_funcs:
+            img = getattr(cls, func_name)(input_img, output_img)
+        return img
+
+    @classmethod
+    def to_input_type_image(
+        cls, input_img: Union[np.ndarray, Image.Image], output_img: np.ndarray
+    ) -> Union[np.ndarray, Image.Image]:
+        if isinstance(input_img, Image.Image):
+            return Image.fromarray(ImagePrerocessor.to_numpy_uint_255(output_img))
+        else:
+            if input_img.dtype == np.uint8:
+                return output_img
+            else:
+                return output_img / 255
 
 
 def align_horizontal_center(
-    img: Union[Image.Image, np.ndarray], w: int
-) -> Union[Image.Image, np.ndarray]:
+    img: Union[np.ndarray, Image.Image], w: int, bg_color: tuple[int] = (255, 255, 255, 0)
+) -> Union[np.ndarray, Image.Image]:
     """
     params:
         img: Target image to align.
@@ -142,31 +79,45 @@ def align_horizontal_center(
     return:
         dst: Aligned image.
     """
-    img_np = np.array(img)
-    _h, _w, _ = img_np.shape
-    if _w == w:
+    img_np = ImagePrerocessor.execute(img)
+    ch, cw, c = img_np.shape
+    bg_color = np.array(bg_color, dtype=np.uint8)[:c]
+    if cw == w:
         return img
-    elif _w > w:
-        raise ValueError(
-            f"Target image width {_w} is larger than the draw area width {w}."
-        )
-    padding_left = (w - _w) // 2
-    dst = np.ones((_h, w, 3))
-    if img_np.dtype == np.uint8:
-        dst = (dst * 255).astype(np.uint8)
-        dst[:_h, padding_left : padding_left + _w] = img_np
-        if type(img) == Image.Image:
-            return Image.fromarray(dst)
-        else:
-            return dst
-    else:
-        dst[:_h, padding_left : padding_left + _w] = img_np
-        return dst
+    elif cw > w:
+        raise ValueError(f"Target image width {cw} is larger than the draw area width {w}.")
+    padding_left = (w - cw) // 2
+    dst = np.ones((ch, w, c), dtype=np.uint8) * bg_color
+    dst[:, padding_left : padding_left + cw] = img_np
+    return ImagePostprocessor.execute(img, dst)
+
+
+def align_vertical_center(
+    img: Union[np.ndarray, Image.Image], h: int, bg_color: tuple[int] = (255, 255, 255, 0)
+) -> Union[np.ndarray, Image.Image]:
+    """
+    params:
+        img: Target image to align.
+        h: The height of the area.
+    return:
+        dst: Aligned image.
+    """
+    img_np = ImagePrerocessor.execute(img)
+    ch, cw, c = img_np.shape
+    bg_color = np.array(bg_color, dtype=np.uint8)[:c]
+    if ch == h:
+        return img
+    elif ch > h:
+        raise ValueError(f"Target image height {ch} is larger than the draw area height {h}.")
+    padding_top = (h - ch) // 2
+    dst = np.ones((h, cw, c), dtype=np.uint8) * bg_color
+    dst[padding_top : padding_top + ch] = img_np
+    return ImagePostprocessor.execute(img, dst)
 
 
 def align_center(
-    img: Union[Image.Image, np.ndarray], w: int, h: int
-) -> Union[Image.Image, np.ndarray]:
+    img: Union[np.ndarray, Image.Image], w: int, h: int, bg_color: tuple[int] = (255, 255, 255, 0)
+) -> Union[np.ndarray, Image.Image]:
     """
     params:
         img: Target image to align.
@@ -175,7 +126,53 @@ def align_center(
     return:
         dst: Aligned image.
     """
-    return align_horizontal_center(align_vertical_center(img, h), w)
+    return align_horizontal_center(align_vertical_center(img, h, bg_color), w, bg_color)
+
+
+def get_concat_horizontal(
+    imgs: List[Union[np.ndarray, Image.Image]], margin: int = 0, margin_color: tuple[int] = (255, 255, 255, 0)
+):
+    """
+    params:
+        imgs: List of images to concatenate.
+        margin: Margin between images.
+        bg_color: Background color.
+    """
+    imgs_np = [ImagePrerocessor.execute(img) for img in imgs]
+    c = imgs_np[0].shape[2]
+    margin_np = np.ones((1, margin, c), dtype=np.uint8) * np.array(margin_color, dtype=np.uint8)[:c]
+    imgs_np = [imgs_np[i // 2] if i % 2 == 0 else margin_np for i in range(len(imgs_np) * 2 - 1)]
+    H = max([img.shape[0] for img in imgs_np])
+    W = sum([img.shape[1] for img in imgs_np])
+    dst = np.ones((H, W, c), dtype=np.uint8) * np.array(margin_color, dtype=np.uint8)[:c]
+    pivotW = 0
+    for img in imgs_np:
+        dst[:, pivotW : pivotW + img.shape[1]] = img
+        pivotW += img.shape[1]
+    return ImagePostprocessor.execute(imgs[0], dst)
+
+
+def get_concat_vertical(
+    imgs: List[Union[np.ndarray, Image.Image]], margin: int = 0, margin_color: tuple[int] = (255, 255, 255, 0)
+):
+    """
+    params:
+        imgs: List of images to concatenate.
+        margin: Margin between images.
+        bg_color: Background color.
+    """
+    imgs_np = [ImagePrerocessor.execute(img) for img in imgs]
+    c = imgs_np[0].shape[2]
+    margin_np = np.ones((margin, 1, c), dtype=np.uint8) * np.array(margin_color, dtype=np.uint8)[:c]
+    imgs_np = [imgs_np[i // 2] if i % 2 == 0 else margin_np for i in range(len(imgs_np) * 2 - 1)]
+    H = sum([img.shape[0] for img in imgs_np])
+    W = max([img.shape[1] for img in imgs_np])
+    dst = np.ones((H, W, c), dtype=np.uint8) * np.array(margin_color, dtype=np.uint8)[:c]
+    pivotH = 0
+    for img in imgs_np:
+        dst[pivotH : pivotH + img.shape[0]] = img
+        pivotH += img.shape[0]
+    return ImagePostprocessor.execute(imgs[0], dst)
 
 
 def save_as_gif(
@@ -197,9 +194,7 @@ def save_as_gif(
     return True
 
 
-def _resize_for_video(
-    imgs: List[Union[Image.Image, np.ndarray]]
-) -> List[Union[Image.Image, np.ndarray]]:
+def _resize_for_video(imgs: List[Union[Image.Image, np.ndarray]]) -> List[Union[Image.Image, np.ndarray]]:
     _imgs = []
     # imageio can't save h x w video which h%2=1 or w%2=1
     if type(imgs[0]) == Image.Image:
@@ -224,34 +219,20 @@ def save_as_video(
 ) -> bool:
     Path(save_path).parent.mkdir(exist_ok=True, parents=True)
     if type(imgs[0]) == Image.Image:
-        return _pil_imgs_to_video(
-            imgs=_resize_for_video(imgs), save_path=save_path, fps=fps
-        )
+        return _pil_imgs_to_video(imgs=_resize_for_video(imgs), save_path=save_path, fps=fps)
     else:
         if imgs[0].dtype == np.uint8:
-            return _pil_imgs_to_video(
-                imgs=_resize_for_video(imgs), save_path=save_path, fps=fps
-            )
+            return _pil_imgs_to_video(imgs=_resize_for_video(imgs), save_path=save_path, fps=fps)
         else:
-            return _np_imgs_to_video(
-                imgs=_resize_for_video(imgs), save_path=save_path, fps=fps
-            )
+            return _np_imgs_to_video(imgs=_resize_for_video(imgs), save_path=save_path, fps=fps)
 
 
-def _pil_imgs_to_video(
-    imgs: List[Image.Image], save_path: Union[str, Path], fps: float
-) -> bool:
-    imageio.mimsave(
-        str(save_path), [np.array(img) for img in imgs], fps=fps, macro_block_size=1
-    )
+def _pil_imgs_to_video(imgs: List[Image.Image], save_path: Union[str, Path], fps: float) -> bool:
+    imageio.mimsave(str(save_path), [np.array(img) for img in imgs], fps=fps, macro_block_size=1)
     print(f"Video saved {save_path}")
     return True
 
 
-def _np_imgs_to_video(
-    imgs: List[Image.Image], save_path: Union[str, Path], fps: float
-) -> bool:
-    imgs_pil = [
-        img if img.dtype == np.uint8 else (img * 255).astype(np.uint8) for img in imgs
-    ]
+def _np_imgs_to_video(imgs: List[Image.Image], save_path: Union[str, Path], fps: float) -> bool:
+    imgs_pil = [img if img.dtype == np.uint8 else (img * 255).astype(np.uint8) for img in imgs]
     return _pil_imgs_to_video(imgs=imgs_pil, save_path=save_path, fps=fps)
