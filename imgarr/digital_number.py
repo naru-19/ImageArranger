@@ -1,6 +1,5 @@
 from typing import Optional, Tuple
-
-import cv2
+from PIL import Image
 import numpy as np
 
 ___all__ = ["num2img"]
@@ -34,10 +33,7 @@ def num2img(
         # digit[:,4*i,:] is margin
         digit[1:6, 4 * i + 1 : 4 * (i + 1)] = _get_digit(int(num))
     if size:
-        h, w, _ = digit.shape
-        digit = cv2.resize(
-            digit, None, None, size[0] / w, size[1] / h, cv2.INTER_NEAREST
-        )
+        digit = np.array(Image.fromarray((digit * 255).astype(np.uint8)).resize(size))
     return digit
 
 
@@ -70,3 +66,6 @@ def _get_digit(x):
         for px in lines[line_id]:
             block[px // 3, px % 3, :] = 1
     return block
+
+
+num2img(123, fix_digit=3, size=(100, 100))
