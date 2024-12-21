@@ -1,11 +1,8 @@
 from pathlib import Path
 from typing import List, Union
-
-import cv2
 import imageio
 import numpy as np
 from PIL import Image
-from tqdm import tqdm
 
 __all__ = [
     "get_concat_horizontal",
@@ -70,7 +67,7 @@ class ImagePostprocessor:
 
 
 def align_horizontal_center(
-    img: Union[np.ndarray, Image.Image], w: int, bg_color: tuple[int] = (255, 255, 255, 0)
+    img: Union[np.ndarray, Image.Image], w: int, bg_color: Tuple[int] = (255, 255, 255, 0)
 ) -> Union[np.ndarray, Image.Image]:
     """
     params:
@@ -93,7 +90,7 @@ def align_horizontal_center(
 
 
 def align_vertical_center(
-    img: Union[np.ndarray, Image.Image], h: int, bg_color: tuple[int] = (255, 255, 255, 0)
+    img: Union[np.ndarray, Image.Image], h: int, bg_color: Tuple[int] = (255, 255, 255, 0)
 ) -> Union[np.ndarray, Image.Image]:
     """
     params:
@@ -116,7 +113,7 @@ def align_vertical_center(
 
 
 def align_center(
-    img: Union[np.ndarray, Image.Image], w: int, h: int, bg_color: tuple[int] = (255, 255, 255, 0)
+    img: Union[np.ndarray, Image.Image], w: int, h: int, bg_color: Tuple[int] = (255, 255, 255, 0)
 ) -> Union[np.ndarray, Image.Image]:
     """
     params:
@@ -130,7 +127,7 @@ def align_center(
 
 
 def get_concat_horizontal(
-    imgs: List[Union[np.ndarray, Image.Image]], margin: int = 0, margin_color: tuple[int] = (255, 255, 255, 0)
+    imgs: List[Union[np.ndarray, Image.Image]], margin: int = 0, margin_color: Tuple[int] = (255, 255, 255, 0)
 ):
     """
     params:
@@ -153,7 +150,7 @@ def get_concat_horizontal(
 
 
 def get_concat_vertical(
-    imgs: List[Union[np.ndarray, Image.Image]], margin: int = 0, margin_color: tuple[int] = (255, 255, 255, 0)
+    imgs: List[Union[np.ndarray, Image.Image]], margin: int = 0, margin_color: Tuple[int] = (255, 255, 255, 0)
 ):
     """
     params:
